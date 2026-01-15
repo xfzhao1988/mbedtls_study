@@ -1,18 +1,27 @@
 /*
+本部分为自己添加的注释，非原有source code部分：
+1. SPDX：Software Package Data Exchange，软件包数据交换
+
+ */
+
+/*
  *  FIPS-197 compliant AES implementation
+ *  符合 FIPS-197 的 AES 实现
  *
  *  Copyright The Mbed TLS Contributors
+ *  Copyright Mbed TLS 贡献者
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
+ *  SPDX 许可证标识：Apache-2.0 或 GPL-2.0-or-later
  */
 /*
  *  The AES block cipher was designed by Vincent Rijmen and Joan Daemen.
+ *  AES 分组密码由 Vincent Rijmen 和 Joan Daemen 设计。
  *
  *  https://csrc.nist.gov/csrc/media/projects/cryptographic-standards-and-guidelines/documents/aes-development/rijndael-ammended.pdf
  *  http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
  */
 
 #include "common.h"
-
 #if defined(MBEDTLS_AES_C)
 
 #include <string.h>
@@ -58,6 +67,8 @@
 /*
  * This is a convenience shorthand macro to check if we need reverse S-box and
  * reverse tables. It's private and only defined in this file.
+ * 这是一个便捷的缩写宏，用于判断是否需要逆 S-box 与逆表。
+ * 它是私有的，仅在本文件中定义。
  */
 #if (!defined(MBEDTLS_AES_DECRYPT_ALT) || \
     (!defined(MBEDTLS_AES_SETKEY_DEC_ALT) && !defined(MBEDTLS_AES_USE_HARDWARE_ONLY))) && \
@@ -68,12 +79,15 @@
 #if !defined(MBEDTLS_AES_ALT)
 
 #if defined(MBEDTLS_VIA_PADLOCK_HAVE_CODE)
+/* Cache for VIA Padlock AES capability probing (-1 unknown, 0 no, 1 yes). */
+/* VIA Padlock AES 能力探测缓存（-1 未知，0 不支持，1 支持）。 */
 static int aes_padlock_ace = -1;
 #endif
 
 #if defined(MBEDTLS_AES_ROM_TABLES)
 /*
  * Forward S-box
+ * 正向 S-box
  */
 MBEDTLS_MAYBE_UNUSED static const unsigned char FSb[256] =
 {
@@ -113,6 +127,7 @@ MBEDTLS_MAYBE_UNUSED static const unsigned char FSb[256] =
 
 /*
  * Forward tables
+ * 正向查表
  */
 #define FT \
 \
@@ -201,6 +216,7 @@ MBEDTLS_MAYBE_UNUSED static const uint32_t FT3[256] = { FT };
 
 /*
  * Reverse S-box
+ * 逆向 S-box
  */
 MBEDTLS_MAYBE_UNUSED static const unsigned char RSb[256] =
 {
@@ -240,6 +256,7 @@ MBEDTLS_MAYBE_UNUSED static const unsigned char RSb[256] =
 
 /*
  * Reverse tables
+ * 逆向查表
  */
 #define RT \
 \
@@ -329,6 +346,7 @@ MBEDTLS_MAYBE_UNUSED static const uint32_t RT3[256] = { RT };
 
 /*
  * Round constants
+ * 轮常量
  */
 MBEDTLS_MAYBE_UNUSED static const uint32_t round_constants[10] =
 {
@@ -341,6 +359,7 @@ MBEDTLS_MAYBE_UNUSED static const uint32_t round_constants[10] =
 
 /*
  * Forward S-box & tables
+ * 正向 S-box 与查表
  */
 MBEDTLS_MAYBE_UNUSED static unsigned char FSb[256];
 MBEDTLS_MAYBE_UNUSED static uint32_t FT0[256];
@@ -350,6 +369,7 @@ MBEDTLS_MAYBE_UNUSED static uint32_t FT3[256];
 
 /*
  * Reverse S-box & tables
+ * 逆向 S-box 与查表
  */
 MBEDTLS_MAYBE_UNUSED static unsigned char RSb[256];
 
@@ -360,18 +380,24 @@ MBEDTLS_MAYBE_UNUSED static uint32_t RT3[256];
 
 /*
  * Round constants
+ * 轮常量
  */
 MBEDTLS_MAYBE_UNUSED static uint32_t round_constants[10];
 
 /*
  * Tables generation code
+ * 表生成代码
  */
 #define ROTL8(x) (((x) << 8) & 0xFFFFFFFF) | ((x) >> 24)
 #define XTIME(x) (((x) << 1) ^ (((x) & 0x80) ? 0x1B : 0x00))
 #define MUL(x, y) (((x) && (y)) ? pow[(log[(x)]+log[(y)]) % 255] : 0)
 
+/* Lazy-init guard for runtime-generated S-boxes and T-tables. */
+/* 运行时生成 S-box 与 T 表的延迟初始化标记。 */
 MBEDTLS_MAYBE_UNUSED static int aes_init_done = 0;
 
+/* Build S-boxes and T-tables at runtime when ROM tables are disabled. */
+/* 在禁用 ROM 表时于运行时生成 S-box 与 T 表。 */
 MBEDTLS_MAYBE_UNUSED static void aes_gen_tables(void)
 {
     int i;
@@ -381,6 +407,7 @@ MBEDTLS_MAYBE_UNUSED static void aes_gen_tables(void)
 
     /*
      * compute pow and log tables over GF(2^8)
+     * 在 GF(2^8) 上计算 pow 和 log 表
      */
     for (i = 0, x = 1; i < 256; i++) {
         pow[i] = x;
@@ -390,6 +417,7 @@ MBEDTLS_MAYBE_UNUSED static void aes_gen_tables(void)
 
     /*
      * calculate the round constants
+     * 计算轮常量
      */
     for (i = 0, x = 1; i < 10; i++) {
         round_constants[i] = x;
@@ -398,6 +426,7 @@ MBEDTLS_MAYBE_UNUSED static void aes_gen_tables(void)
 
     /*
      * generate the forward and reverse S-boxes
+     * 生成正向与逆向 S-box
      */
     FSb[0x00] = 0x63;
 #if defined(MBEDTLS_AES_NEED_REVERSE_TABLES)
@@ -421,6 +450,7 @@ MBEDTLS_MAYBE_UNUSED static void aes_gen_tables(void)
 
     /*
      * generate the forward and reverse tables
+     * 生成正向与逆向查表
      */
     for (i = 0; i < 256; i++) {
         x = FSb[i];
@@ -491,11 +521,15 @@ MBEDTLS_MAYBE_UNUSED static void aes_gen_tables(void)
 
 void mbedtls_aes_init(mbedtls_aes_context *ctx)
 {
+    /* Clear all fields to a known state. */
+    /* 清零所有字段，确保已知状态。 */
     memset(ctx, 0, sizeof(mbedtls_aes_context));
 }
 
 void mbedtls_aes_free(mbedtls_aes_context *ctx)
 {
+    /* Securely erase sensitive material; tolerate NULL. */
+    /* 安全擦除敏感数据；允许传入 NULL。 */
     if (ctx == NULL) {
         return;
     }
@@ -504,12 +538,16 @@ void mbedtls_aes_free(mbedtls_aes_context *ctx)
 }
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
+/* Initialize XTS context (two AES contexts: data and tweak). */
+/* 初始化 XTS 上下文（包含数据与 tweak 两个 AES 上下文）。 */
 void mbedtls_aes_xts_init(mbedtls_aes_xts_context *ctx)
 {
     mbedtls_aes_init(&ctx->crypt);
     mbedtls_aes_init(&ctx->tweak);
 }
 
+/* Free XTS context and wipe contained AES contexts. */
+/* 释放 XTS 上下文并清除其中的 AES 上下文内容。 */
 void mbedtls_aes_xts_free(mbedtls_aes_xts_context *ctx)
 {
     if (ctx == NULL) {
@@ -526,6 +564,10 @@ void mbedtls_aes_xts_free(mbedtls_aes_xts_context *ctx)
  * correctly aligned.
  * Note that the offset is in units of elements of buf, i.e. 32-bit words,
  * i.e. an offset of 1 means 4 bytes and so on.
+ * 某些实现要求轮密钥按特定边界对齐。
+ * 返回需要加到 buf 的偏移，使 (buf + offset) 正确对齐。
+ * 注意偏移单位是 buf 的元素数，即 32 位字。
+ * 因此偏移为 1 表示 4 字节，依此类推。
  */
 #if (defined(MBEDTLS_VIA_PADLOCK_HAVE_CODE)) ||        \
     (defined(MBEDTLS_AESNI_C) && MBEDTLS_AESNI_HAVE_CODE == 2)
@@ -555,11 +597,13 @@ MBEDTLS_MAYBE_UNUSED static unsigned mbedtls_aes_rk_offset(uint32_t *buf)
     if (align_16_bytes) {
         /* These implementations needs 16-byte alignment
          * for the round key array. */
+        /* 这些实现要求轮密钥数组 16 字节对齐。 */
         unsigned delta = ((uintptr_t) buf & 0x0000000fU) / 4;
         if (delta == 0) {
             return 0;
         } else {
             return 4 - delta; // 16 bytes = 4 uint32_t
+                              // 16 字节 = 4 个 uint32_t
         }
     }
 #else /* MAY_NEED_TO_ALIGN */
@@ -571,13 +615,25 @@ MBEDTLS_MAYBE_UNUSED static unsigned mbedtls_aes_rk_offset(uint32_t *buf)
 
 /*
  * AES key schedule (encryption)
+ * AES 密钥扩展（加密）
  */
 #if !defined(MBEDTLS_AES_SETKEY_ENC_ALT)
+/*
+ * Expand an AES key for encryption.
+ * 扩展 AES 加密密钥。
+ *
+ * Populates ctx->nr (round count) and the aligned round-key buffer in ctx->buf.
+ * 填充 ctx->nr（轮数）并在 ctx->buf 中写入对齐的轮密钥。
+ * Uses hardware backends when available.
+ * 如有硬件后端可用则优先使用。
+ */
 int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
                            unsigned int keybits)
 {
-    uint32_t *RK;
+    uint32_t *RK; /* Pointer to first round key word (aligned). 轮密钥首字（对齐后）。 */
 
+    /* Select number of rounds based on key size. */
+    /* 根据密钥长度选择轮数。 */
     switch (keybits) {
         case 128: ctx->nr = 10; break;
 #if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
@@ -588,12 +644,16 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
     }
 
 #if !defined(MBEDTLS_AES_ROM_TABLES)
+    /* Initialize S-boxes/T-tables once when using runtime tables. */
+    /* 使用运行时表时，仅初始化一次 S-box/T 表。 */
     if (aes_init_done == 0) {
         aes_gen_tables();
         aes_init_done = 1;
     }
 #endif
 
+    /* Compute alignment offset for round-key storage. */
+    /* 计算轮密钥存储的对齐偏移。 */
     ctx->rk_offset = mbedtls_aes_rk_offset(ctx->buf);
     RK = ctx->buf + ctx->rk_offset;
 
@@ -682,17 +742,26 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key,
 
 /*
  * AES key schedule (decryption)
+ * AES 密钥扩展（解密）
  */
 #if !defined(MBEDTLS_AES_SETKEY_DEC_ALT) && !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+/*
+ * Expand an AES key for decryption.
+ * 扩展 AES 解密密钥。
+ *
+ * Derives the encryption schedule first, then inverts the round keys for
+ * decryption (or delegates to hardware backends when available).
+ * 先生成加密轮密钥，再反转为解密轮密钥（或交由硬件后端处理）。
+ */
 int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
                            unsigned int keybits)
 {
 #if !defined(MBEDTLS_AES_USE_HARDWARE_ONLY)
-    uint32_t *SK;
+    uint32_t *SK; /* Pointer into temp key schedule (source). 临时轮密钥指针（源）。 */
 #endif
     int ret;
-    mbedtls_aes_context cty;
-    uint32_t *RK;
+    mbedtls_aes_context cty; /* Temporary context for encryption schedule. 临时加密上下文。 */
+    uint32_t *RK;            /* Output round-key buffer (aligned). 输出轮密钥缓冲（对齐）。 */
 
 
     mbedtls_aes_init(&cty);
@@ -701,6 +770,7 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key,
     RK = ctx->buf + ctx->rk_offset;
 
     /* Also checks keybits */
+    /* 同时检查 keybits 的合法性。 */
     if ((ret = mbedtls_aes_setkey_enc(&cty, key, keybits)) != 0) {
         goto exit;
     }
@@ -755,6 +825,12 @@ exit:
 #endif /* !MBEDTLS_AES_SETKEY_DEC_ALT && !MBEDTLS_BLOCK_CIPHER_NO_DECRYPT */
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
+/*
+ * Split an XTS combined key into data and tweak keys.
+ * Valid key sizes are 256 and 512 bits (two AES keys).
+ * 将 XTS 组合密钥拆分为数据密钥与 tweak 密钥。
+ * 合法长度为 256 和 512 位（两把 AES 密钥）。
+ */
 static int mbedtls_aes_xts_decode_keys(const unsigned char *key,
                                        unsigned int keybits,
                                        const unsigned char **key1,
@@ -779,6 +855,12 @@ static int mbedtls_aes_xts_decode_keys(const unsigned char *key,
     return 0;
 }
 
+/*
+ * Set up XTS encryption keys.
+ * The tweak key is always set up for encryption as required by XTS.
+ * 设置 XTS 加密密钥。
+ * 根据 XTS 要求，tweak 密钥始终以加密方式设置。
+ */
 int mbedtls_aes_xts_setkey_enc(mbedtls_aes_xts_context *ctx,
                                const unsigned char *key,
                                unsigned int keybits)
@@ -794,15 +876,23 @@ int mbedtls_aes_xts_setkey_enc(mbedtls_aes_xts_context *ctx,
     }
 
     /* Set the tweak key. Always set tweak key for the encryption mode. */
+    /* 设置 tweak 密钥。按 XTS 要求始终以加密方式设置 tweak。 */
     ret = mbedtls_aes_setkey_enc(&ctx->tweak, key2, key2bits);
     if (ret != 0) {
         return ret;
     }
 
     /* Set crypt key for encryption. */
+    /* 设置数据加密密钥。 */
     return mbedtls_aes_setkey_enc(&ctx->crypt, key1, key1bits);
 }
 
+/*
+ * Set up XTS decryption keys.
+ * The tweak key is always set up for encryption as required by XTS.
+ * 设置 XTS 解密密钥。
+ * 根据 XTS 要求，tweak 密钥始终以加密方式设置。
+ */
 int mbedtls_aes_xts_setkey_dec(mbedtls_aes_xts_context *ctx,
                                const unsigned char *key,
                                unsigned int keybits)
@@ -818,16 +908,20 @@ int mbedtls_aes_xts_setkey_dec(mbedtls_aes_xts_context *ctx,
     }
 
     /* Set the tweak key. Always set tweak key for encryption. */
+    /* 设置 tweak 密钥。按 XTS 要求始终以加密方式设置 tweak。 */
     ret = mbedtls_aes_setkey_enc(&ctx->tweak, key2, key2bits);
     if (ret != 0) {
         return ret;
     }
 
     /* Set crypt key for decryption. */
+    /* 设置数据解密密钥。 */
     return mbedtls_aes_setkey_dec(&ctx->crypt, key1, key1bits);
 }
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
 
+/* One forward AES round using T-tables (state in Y*, output to X*). */
+/* 使用 T 表执行一轮正向 AES（输入 Y*，输出 X*）。 */
 #define AES_FROUND(X0, X1, X2, X3, Y0, Y1, Y2, Y3)                 \
     do                                                      \
     {                                                       \
@@ -852,6 +946,8 @@ int mbedtls_aes_xts_setkey_dec(mbedtls_aes_xts_context *ctx,
                AES_FT3(MBEDTLS_BYTE_3(Y2));     \
     } while (0)
 
+/* One reverse AES round using inverse T-tables (state in Y*, output to X*). */
+/* 使用逆 T 表执行一轮反向 AES（输入 Y*，输出 X*）。 */
 #define AES_RROUND(X0, X1, X2, X3, Y0, Y1, Y2, Y3)                 \
     do                                                      \
     {                                                       \
@@ -878,14 +974,23 @@ int mbedtls_aes_xts_setkey_dec(mbedtls_aes_xts_context *ctx,
 
 /*
  * AES-ECB block encryption
+ * AES-ECB 分组加密
  */
 #if !defined(MBEDTLS_AES_ENCRYPT_ALT)
+/*
+ * Encrypt a single 16-byte block using the prepared round keys in ctx.
+ * This is the software fallback used by ECB and other modes.
+ * 使用 ctx 中的轮密钥加密单个 16 字节分组。
+ * 这是 ECB 及其他模式的软实现回退路径。
+ */
 int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx,
                                  const unsigned char input[16],
                                  unsigned char output[16])
 {
     int i;
-    uint32_t *RK = ctx->buf + ctx->rk_offset;
+    uint32_t *RK = ctx->buf + ctx->rk_offset; /* Round keys (first round). 轮密钥（第一轮起始）。 */
+    /* Two-state buffers to unroll rounds in pairs for better throughput. */
+    /* 双状态缓冲区：按两轮展开以提升吞吐。 */
     struct {
         uint32_t X[4];
         uint32_t Y[4];
@@ -940,14 +1045,23 @@ int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx,
 
 /*
  * AES-ECB block decryption
+ * AES-ECB 分组解密
  */
 #if !defined(MBEDTLS_AES_DECRYPT_ALT) && !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+/*
+ * Decrypt a single 16-byte block using the prepared round keys in ctx.
+ * This is the software fallback used by ECB and other modes.
+ * 使用 ctx 中的轮密钥解密单个 16 字节分组。
+ * 这是 ECB 及其他模式的软实现回退路径。
+ */
 int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx,
                                  const unsigned char input[16],
                                  unsigned char output[16])
 {
     int i;
-    uint32_t *RK = ctx->buf + ctx->rk_offset;
+    uint32_t *RK = ctx->buf + ctx->rk_offset; /* Round keys (first round). 轮密钥（第一轮起始）。 */
+    /* Two-state buffers to unroll rounds in pairs for better throughput. */
+    /* 双状态缓冲区：按两轮展开以提升吞吐。 */
     struct {
         uint32_t X[4];
         uint32_t Y[4];
@@ -1006,20 +1120,33 @@ int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx,
  * if the library is called from a language with managed memory), and in later
  * calls it might have a different alignment with respect to 16-byte memory.
  * So we may need to realign.
+ * VIA Padlock 与基于内在函数的 AESNI 实现要求轮密钥按 16 字节边界对齐。
+ * 我们在创建时会处理对齐，但 AES 上下文可能被移动（例如在托管内存语言中），
+ * 之后调用时相对于 16 字节边界的对齐可能发生变化。
+ * 因此可能需要重新对齐。
  */
 MBEDTLS_MAYBE_UNUSED static void aes_maybe_realign(mbedtls_aes_context *ctx)
 {
+    /* Move round keys if the buffer alignment has changed. */
+    /* 若缓冲区对齐发生变化，则移动轮密钥。 */
     unsigned new_offset = mbedtls_aes_rk_offset(ctx->buf);
     if (new_offset != ctx->rk_offset) {
-        memmove(ctx->buf + new_offset,     // new address
-                ctx->buf + ctx->rk_offset, // current address
-                (ctx->nr + 1) * 16);       // number of round keys * bytes per rk
+        memmove(ctx->buf + new_offset,     // new address / 新地址
+                ctx->buf + ctx->rk_offset, // current address / 当前地址
+                (ctx->nr + 1) * 16);       // number of round keys * bytes per rk / 轮密钥数量 * 每轮密钥字节数
         ctx->rk_offset = new_offset;
     }
 }
 
 /*
  * AES-ECB block encryption/decryption
+ * AES-ECB 分组加/解密
+ */
+/*
+ * Encrypt or decrypt a single 16-byte block in ECB mode.
+ * Dispatches to hardware backends when available.
+ * 在 ECB 模式下加解密单个 16 字节分组。
+ * 如有硬件后端可用则进行分发。
  */
 int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx,
                           int mode,
@@ -1068,6 +1195,13 @@ int mbedtls_aes_crypt_ecb(mbedtls_aes_context *ctx,
 
 /*
  * AES-CBC buffer encryption/decryption
+ * AES-CBC 缓冲区加/解密
+ */
+/*
+ * CBC mode over an arbitrary-length buffer (length must be a multiple of 16).
+ * Updates iv in place to the last ciphertext block for chaining.
+ * CBC 模式处理任意长度缓冲区（长度须为 16 的倍数）。
+ * 就地更新 iv 为最后一个密文块以便链式使用。
  */
 int mbedtls_aes_crypt_cbc(mbedtls_aes_context *ctx,
                           int mode,
@@ -1077,13 +1211,14 @@ int mbedtls_aes_crypt_cbc(mbedtls_aes_context *ctx,
                           unsigned char *output)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    unsigned char temp[16];
+    unsigned char temp[16]; /* Saves previous ciphertext block during decrypt. 解密时保存前一密文块。 */
 
     if (mode != MBEDTLS_AES_ENCRYPT && mode != MBEDTLS_AES_DECRYPT) {
         return MBEDTLS_ERR_AES_BAD_INPUT_DATA;
     }
 
     /* Nothing to do if length is zero. */
+    /* length 为 0 时无需处理。 */
     if (length == 0) {
         return 0;
     }
@@ -1101,10 +1236,12 @@ int mbedtls_aes_crypt_cbc(mbedtls_aes_context *ctx,
         // If padlock data misaligned, we just fall back to
         // unaccelerated mode
         //
+        // 如果 Padlock 数据未对齐，则回退到非加速模式
+        //
     }
 #endif
 
-    const unsigned char *ivp = iv;
+    const unsigned char *ivp = iv; /* Current IV pointer for encrypt path. 加密路径的当前 IV 指针。 */
 
     if (mode == MBEDTLS_AES_DECRYPT) {
         while (length > 0) {
@@ -1116,6 +1253,8 @@ int mbedtls_aes_crypt_cbc(mbedtls_aes_context *ctx,
             /* Avoid using the NEON implementation of mbedtls_xor. Because of the dependency on
              * the result for the next block in CBC, and the cost of transferring that data from
              * NEON registers, NEON is slower on aarch64. */
+            /* 避免使用 mbedtls_xor 的 NEON 实现。由于 CBC 下一块依赖上一块结果，
+             * 且在 NEON 寄存器与内存之间搬运代价较高，aarch64 上 NEON 反而更慢。 */
             mbedtls_xor_no_simd(output, output, iv, 16);
 
             memcpy(iv, temp, 16);
@@ -1149,15 +1288,20 @@ exit:
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
 
+/* 128-bit tweak value for XTS, represented as a byte array. */
+/* XTS 使用的 128 位 tweak，表示为字节数组。 */
 typedef unsigned char mbedtls_be128[16];
 
 /*
  * GF(2^128) multiplication function
+ * GF(2^128) 乘法函数
  *
  * This function multiplies a field element by x in the polynomial field
  * representation. It uses 64-bit word operations to gain speed but compensates
  * for machine endianness and hence works correctly on both big and little
  * endian machines.
+ * 该函数在多项式域表示中将元素乘以 x。它使用 64 位字操作以提升速度，
+ * 同时补偿机器端序差异，因此在大端与小端机器上都能正确工作。
  */
 #if defined(MBEDTLS_AESCE_C) || defined(MBEDTLS_AESNI_C)
 MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
@@ -1179,9 +1323,12 @@ static inline void mbedtls_gf128mul_x_ble(unsigned char r[16],
 
 /*
  * AES-XTS buffer encryption/decryption
+ * AES-XTS 缓冲区加/解密
  *
  * Use of MBEDTLS_OPTIMIZE_FOR_PERFORMANCE here and for mbedtls_gf128mul_x_ble()
  * is a 3x performance improvement for gcc -Os, if we have hardware AES support.
+ * 若具备硬件 AES 支持，在此处及 mbedtls_gf128mul_x_ble() 使用
+ * MBEDTLS_OPTIMIZE_FOR_PERFORMANCE 可在 gcc -Os 下带来约 3 倍性能提升。
  */
 #if defined(MBEDTLS_AESCE_C) || defined(MBEDTLS_AESNI_C)
 MBEDTLS_OPTIMIZE_FOR_PERFORMANCE
@@ -1194,27 +1341,30 @@ int mbedtls_aes_crypt_xts(mbedtls_aes_xts_context *ctx,
                           unsigned char *output)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    size_t blocks = length / 16;
-    size_t leftover = length % 16;
-    unsigned char tweak[16];
-    unsigned char prev_tweak[16];
-    unsigned char tmp[16];
+    size_t blocks = length / 16;   /* Number of full blocks. 完整分组数量。 */
+    size_t leftover = length % 16; /* Trailing bytes for ciphertext stealing. 尾部残余字节（用于密文窃取）。 */
+    unsigned char tweak[16];       /* Current tweak for block processing. 当前分组的 tweak。 */
+    unsigned char prev_tweak[16];  /* Saved tweak for ciphertext stealing. 用于密文窃取的上一 tweak。 */
+    unsigned char tmp[16];         /* Scratch for block XOR/encrypt/decrypt. 分组临时缓冲。 */
 
     if (mode != MBEDTLS_AES_ENCRYPT && mode != MBEDTLS_AES_DECRYPT) {
         return MBEDTLS_ERR_AES_BAD_INPUT_DATA;
     }
 
     /* Data units must be at least 16 bytes long. */
+    /* 数据单元长度至少为 16 字节。 */
     if (length < 16) {
         return MBEDTLS_ERR_AES_INVALID_INPUT_LENGTH;
     }
 
     /* NIST SP 800-38E disallows data units larger than 2**20 blocks. */
+    /* NIST SP 800-38E 禁止数据单元超过 2**20 个分组。 */
     if (length > (1 << 20) * 16) {
         return MBEDTLS_ERR_AES_INVALID_INPUT_LENGTH;
     }
 
     /* Compute the tweak. */
+    /* 计算 tweak。 */
     ret = mbedtls_aes_crypt_ecb(&ctx->tweak, MBEDTLS_AES_ENCRYPT,
                                 data_unit, tweak);
     if (ret != 0) {
@@ -1228,6 +1378,9 @@ int mbedtls_aes_crypt_xts(mbedtls_aes_xts_context *ctx,
              * and this tweak for the leftover bytes. Save the current tweak for
              * the leftovers and then update the current tweak for use on this,
              * the last full block. */
+            /* 解密且存在尾部字节时，当前为最后一个完整分组，
+             * 需使用“下一个”tweak 处理该分组，而将“当前”tweak
+             * 用于尾部字节。先保存当前 tweak，再更新为本分组使用。 */
             memcpy(prev_tweak, tweak, sizeof(tweak));
             mbedtls_gf128mul_x_ble(tweak, tweak);
         }
@@ -1242,6 +1395,7 @@ int mbedtls_aes_crypt_xts(mbedtls_aes_xts_context *ctx,
         mbedtls_xor(output, tmp, tweak, 16);
 
         /* Update the tweak for the next block. */
+        /* 更新 tweak 以处理下一个分组。 */
         mbedtls_gf128mul_x_ble(tweak, tweak);
 
         output += 16;
@@ -1251,24 +1405,30 @@ int mbedtls_aes_crypt_xts(mbedtls_aes_xts_context *ctx,
     if (leftover) {
         /* If we are on the leftover bytes in a decrypt operation, we need to
          * use the previous tweak for these bytes (as saved in prev_tweak). */
+        /* 若解密时存在尾部字节，需要对这些字节使用上一 tweak
+         *（已保存在 prev_tweak 中）。 */
         unsigned char *t = mode == MBEDTLS_AES_DECRYPT ? prev_tweak : tweak;
 
         /* We are now on the final part of the data unit, which doesn't divide
          * evenly by 16. It's time for ciphertext stealing. */
+        /* 当前是数据单元的最后部分，无法被 16 整除，需要进行密文窃取。 */
         size_t i;
         unsigned char *prev_output = output - 16;
 
         /* Copy ciphertext bytes from the previous block to our output for each
          * byte of ciphertext we won't steal. */
+        /* 将前一分组的密文字节拷贝到输出中（未被窃取的部分）。 */
         for (i = 0; i < leftover; i++) {
             output[i] = prev_output[i];
         }
 
         /* Copy the remainder of the input for this final round. */
+        /* 复制本轮剩余输入数据。 */
         mbedtls_xor(tmp, input, t, leftover);
 
         /* Copy ciphertext bytes from the previous block for input in this
          * round. */
+        /* 复制前一分组的密文字节作为本轮输入的剩余部分。 */
         mbedtls_xor(tmp + i, prev_output + i, t + i, 16 - i);
 
         ret = mbedtls_aes_crypt_ecb(&ctx->crypt, mode, tmp, tmp);
@@ -1278,6 +1438,7 @@ int mbedtls_aes_crypt_xts(mbedtls_aes_xts_context *ctx,
 
         /* Write the result back to the previous block, overriding the previous
          * output we copied. */
+        /* 将结果写回前一分组，覆盖之前拷贝的输出。 */
         mbedtls_xor(prev_output, tmp, t, 16);
     }
 
@@ -1288,6 +1449,13 @@ int mbedtls_aes_crypt_xts(mbedtls_aes_xts_context *ctx,
 #if defined(MBEDTLS_CIPHER_MODE_CFB)
 /*
  * AES-CFB128 buffer encryption/decryption
+ * AES-CFB128 缓冲区加/解密
+ */
+/*
+ * CFB-128 processes arbitrary-length data with a 16-byte shift register (iv).
+ * The iv offset tracks the position within the current keystream block.
+ * CFB-128 以 16 字节移位寄存器（iv）处理任意长度数据。
+ * iv_off 跟踪当前密钥流块内的位置。
  */
 int mbedtls_aes_crypt_cfb128(mbedtls_aes_context *ctx,
                              int mode,
@@ -1299,7 +1467,7 @@ int mbedtls_aes_crypt_cfb128(mbedtls_aes_context *ctx,
 {
     int c;
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    size_t n;
+    size_t n; /* Offset into iv/keystream block. iv/密钥流块内偏移。 */
 
     if (mode != MBEDTLS_AES_ENCRYPT && mode != MBEDTLS_AES_DECRYPT) {
         return MBEDTLS_ERR_AES_BAD_INPUT_DATA;
@@ -1350,6 +1518,11 @@ exit:
 
 /*
  * AES-CFB8 buffer encryption/decryption
+ * AES-CFB8 缓冲区加/解密
+ */
+/*
+ * CFB-8 processes data one byte at a time with a 16-byte shift register.
+ * CFB-8 以 16 字节移位寄存器逐字节处理数据。
  */
 int mbedtls_aes_crypt_cfb8(mbedtls_aes_context *ctx,
                            int mode,
@@ -1360,7 +1533,7 @@ int mbedtls_aes_crypt_cfb8(mbedtls_aes_context *ctx,
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     unsigned char c;
-    unsigned char ov[17];
+    unsigned char ov[17]; /* 16-byte shift register plus incoming byte. 16 字节移位寄存器 + 输入字节。 */
 
     if (mode != MBEDTLS_AES_ENCRYPT && mode != MBEDTLS_AES_DECRYPT) {
         return MBEDTLS_ERR_AES_BAD_INPUT_DATA;
@@ -1394,6 +1567,11 @@ exit:
 #if defined(MBEDTLS_CIPHER_MODE_OFB)
 /*
  * AES-OFB (Output Feedback Mode) buffer encryption/decryption
+ * AES-OFB（输出反馈模式）缓冲区加/解密
+ */
+/*
+ * OFB turns AES into a stream cipher; iv_off tracks position in keystream.
+ * OFB 将 AES 变为流密码；iv_off 跟踪密钥流位置。
  */
 int mbedtls_aes_crypt_ofb(mbedtls_aes_context *ctx,
                           size_t length,
@@ -1403,7 +1581,7 @@ int mbedtls_aes_crypt_ofb(mbedtls_aes_context *ctx,
                           unsigned char *output)
 {
     int ret = 0;
-    size_t n;
+    size_t n; /* Offset into iv/keystream block. iv/密钥流块内偏移。 */
 
     n = *iv_off;
 
@@ -1433,6 +1611,13 @@ exit:
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
 /*
  * AES-CTR buffer encryption/decryption
+ * AES-CTR 缓冲区加/解密
+ */
+/*
+ * CTR mode with a 16-byte counter and cached keystream block.
+ * nc_off tracks the offset into stream_block for resumable use.
+ * CTR 模式使用 16 字节计数器与缓存的密钥流块。
+ * nc_off 记录 stream_block 的偏移以支持断点续用。
  */
 int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
                           size_t length,
@@ -1444,7 +1629,7 @@ int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
-    size_t offset = *nc_off;
+    size_t offset = *nc_off; /* Byte offset within stream_block. stream_block 内字节偏移。 */
 
     if (offset > 0x0F) {
         return MBEDTLS_ERR_AES_BAD_INPUT_DATA;
@@ -1467,11 +1652,13 @@ int mbedtls_aes_crypt_ctr(mbedtls_aes_context *ctx,
         }
         mbedtls_xor(&output[i], &input[i], &stream_block[offset], n);
         // offset might be non-zero for the last block, but in that case, we don't use it again
+        // 最后一个分组的 offset 可能非零，但此后不再使用该偏移
         offset = 0;
         i += n;
     }
 
     // capture offset for future resumption
+    // 保存 offset 以便后续续用
     *nc_off = (*nc_off + length) % 16;
 
     ret = 0;
@@ -1484,8 +1671,11 @@ exit:
 #endif /* !MBEDTLS_AES_ALT */
 
 #if defined(MBEDTLS_SELF_TEST)
+/* Run built-in AES self-tests against known vectors. */
+/* 运行内置 AES 自测（基于已知向量）。 */
 /*
  * AES test vectors from:
+ * AES 测试向量来源：
  *
  * http://csrc.nist.gov/archive/aes/rijndael/rijndael-vals.zip
  */
@@ -1544,6 +1734,7 @@ static const unsigned char aes_test_cbc_enc[][16] =
 #if defined(MBEDTLS_CIPHER_MODE_CFB)
 /*
  * AES-CFB128 test vectors from:
+ * AES-CFB128 测试向量来源：
  *
  * http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf
  */
@@ -1614,6 +1805,7 @@ static const unsigned char aes_test_cfb128_ct[][64] =
 #if defined(MBEDTLS_CIPHER_MODE_OFB)
 /*
  * AES-OFB test vectors from:
+ * AES-OFB 测试向量来源：
  *
  * https://csrc.nist.gov/publications/detail/sp/800-38a/final
  */
@@ -1684,6 +1876,7 @@ static const unsigned char aes_test_ofb_ct[][64] =
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
 /*
  * AES-CTR test vectors from:
+ * AES-CTR 测试向量来源：
  *
  * http://www.faqs.org/rfcs/rfc3686.html
  */
@@ -1746,10 +1939,13 @@ static const int aes_test_ctr_len[3] =
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
 /*
  * AES-XTS test vectors from:
+ * AES-XTS 测试向量来源：
  *
  * IEEE P1619/D16 Annex B
+ * IEEE P1619/D16 附录 B
  * https://web.archive.org/web/20150629024421/http://grouper.ieee.org/groups/1619/email/pdf00086.pdf
  * (Archived from original at http://grouper.ieee.org/groups/1619/email/pdf00086.pdf)
+ * （原始链接存档于 http://grouper.ieee.org/groups/1619/email/pdf00086.pdf）
  */
 static const unsigned char aes_test_xts_key[][32] =
 {
@@ -1813,6 +2009,7 @@ static const unsigned char aes_test_xts_data_unit[][16] =
 
 /*
  * Checkup routine
+ * 自检例程
  */
 int mbedtls_aes_self_test(int verbose)
 {
@@ -1880,6 +2077,7 @@ int mbedtls_aes_self_test(int verbose)
 
     /*
      * ECB mode
+     * ECB 模式
      */
     {
         static const int num_tests =
@@ -1920,6 +2118,8 @@ int mbedtls_aes_self_test(int verbose)
              * AES-192 is an optional feature that may be unavailable when
              * there is an alternative underlying implementation i.e. when
              * MBEDTLS_AES_ALT is defined.
+             * AES-192 为可选特性，当存在替代底层实现时可能不可用，
+             * 例如定义了 MBEDTLS_AES_ALT。
              */
             if (ret == MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED && keybits == 192) {
                 mbedtls_printf("skipped\n");
@@ -1953,6 +2153,7 @@ int mbedtls_aes_self_test(int verbose)
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
     /*
      * CBC mode
+     * CBC 模式
      */
     {
         static const int num_tests =
@@ -1984,6 +2185,8 @@ int mbedtls_aes_self_test(int verbose)
              * AES-192 is an optional feature that may be unavailable when
              * there is an alternative underlying implementation i.e. when
              * MBEDTLS_AES_ALT is defined.
+             * AES-192 为可选特性，当存在替代底层实现时可能不可用，
+             * 例如定义了 MBEDTLS_AES_ALT。
              */
             if (ret == MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED && keybits == 192) {
                 mbedtls_printf("skipped\n");
@@ -2027,6 +2230,7 @@ int mbedtls_aes_self_test(int verbose)
 #if defined(MBEDTLS_CIPHER_MODE_CFB)
     /*
      * CFB128 mode
+     * CFB128 模式
      */
     {
         static const int num_tests =
@@ -2051,6 +2255,8 @@ int mbedtls_aes_self_test(int verbose)
              * AES-192 is an optional feature that may be unavailable when
              * there is an alternative underlying implementation i.e. when
              * MBEDTLS_AES_ALT is defined.
+             * AES-192 为可选特性，当存在替代底层实现时可能不可用，
+             * 例如定义了 MBEDTLS_AES_ALT。
              */
             if (ret == MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED && keybits == 192) {
                 mbedtls_printf("skipped\n");
@@ -2091,6 +2297,7 @@ int mbedtls_aes_self_test(int verbose)
 #if defined(MBEDTLS_CIPHER_MODE_OFB)
     /*
      * OFB mode
+     * OFB 模式
      */
     {
         static const int num_tests =
@@ -2115,6 +2322,8 @@ int mbedtls_aes_self_test(int verbose)
              * AES-192 is an optional feature that may be unavailable when
              * there is an alternative underlying implementation i.e. when
              * MBEDTLS_AES_ALT is defined.
+             * AES-192 为可选特性，当存在替代底层实现时可能不可用，
+             * 例如定义了 MBEDTLS_AES_ALT。
              */
             if (ret == MBEDTLS_ERR_PLATFORM_FEATURE_UNSUPPORTED && keybits == 192) {
                 mbedtls_printf("skipped\n");
@@ -2155,6 +2364,7 @@ int mbedtls_aes_self_test(int verbose)
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
     /*
      * CTR mode
+     * CTR 模式
      */
     {
         static const int num_tests =
@@ -2212,6 +2422,7 @@ int mbedtls_aes_self_test(int verbose)
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
     /*
      * XTS mode
+     * XTS 模式
      */
     {
         static const int num_tests =

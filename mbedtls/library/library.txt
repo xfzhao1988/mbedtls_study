@@ -1,0 +1,172 @@
+.
+├── CMakeLists.txt
+├── Makefile
+├── aes.c  - AES 分组密码算法实现
+├── aesce.c  - ARMv8 AES 指令加速实现
+├── aesce.h  - ARMv8 AES 指令加速接口声明
+├── aesni.c  - x86 AES-NI 加速实现
+├── aesni.h  - x86 AES-NI 加速接口声明
+├── alignment.h  - 对齐相关宏与工具
+├── aria.c  - ARIA 分组密码实现
+├── asn1parse.c  - ASN.1 解析实现
+├── asn1write.c  - ASN.1 编码/写入实现
+├── base64.c  - Base64 编解码实现
+├── base64_internal.h  - Base64 内部接口与宏
+├── bignum.c  - 大整数（MPI）高层实现
+├── bignum_core.c  - 大整数核心运算实现
+├── bignum_core.h  - 大整数核心运算接口
+├── bignum_core_invasive.h  - 大整数核心内部/侵入式接口
+├── bignum_internal.h  - 大整数内部辅助接口
+├── bignum_mod.c  - 大整数模运算实现
+├── bignum_mod.h  - 大整数模运算接口
+├── bignum_mod_raw.c  - 低层模运算实现（原始表示）
+├── bignum_mod_raw.h  - 低层模运算接口（原始表示）
+├── bignum_mod_raw_invasive.h  - 低层模运算内部/侵入式接口
+├── block_cipher.c  - 分组密码抽象层实现
+├── block_cipher_internal.h  - 分组密码内部接口
+├── bn_mul.h  - 大整数乘法优化/汇编辅助
+├── camellia.c  - Camellia 分组密码实现
+├── ccm.c  - CCM 模式实现
+├── chacha20.c  - ChaCha20 流密码实现
+├── chachapoly.c  - ChaCha20-Poly1305 AEAD 实现
+├── check_crypto_config.h  - 加密配置一致性检查宏
+├── cipher.c  - 通用密码接口层实现
+├── cipher_invasive.h  - 密码模块内部/侵入式接口
+├── cipher_wrap.c  - 具体密码算法到统一接口的适配
+├── cipher_wrap.h  - cipher_wrap 适配接口声明
+├── cmac.c  - CMAC 消息认证码实现
+├── common.h  - 通用宏与平台兼容定义
+├── constant_time.c  - 常量时间运算实现
+├── constant_time_impl.h  - 常量时间实现细节
+├── constant_time_internal.h  - 常量时间内部接口
+├── ctr.h  - CTR 模式辅助函数
+├── ctr_drbg.c  - CTR-DRBG 随机数发生器实现
+├── debug.c  - 调试输出实现（主要用于 SSL/TLS）
+├── debug_internal.h  - 调试内部接口
+├── des.c  - DES/3DES 实现
+├── dhm.c  - Diffie-Hellman-Merkle 密钥交换实现
+├── ecdh.c  - ECDH 密钥交换实现
+├── ecdsa.c  - ECDSA 签名实现
+├── ecjpake.c  - EC J-PAKE 密钥交换实现
+├── ecp.c  - 椭圆曲线通用运算实现
+├── ecp_curves.c  - 椭圆曲线参数集合
+├── ecp_curves_new.c  - 新增/扩展曲线参数集合
+├── ecp_internal_alt.h  - ECP 替代实现内部接口
+├── ecp_invasive.h  - ECP 内部/侵入式接口
+├── entropy.c  - 熵收集与熵池实现
+├── entropy_poll.c  - 熵源轮询实现
+├── entropy_poll.h  - 熵源轮询接口
+├── gcm.c  - GCM 模式实现
+├── hkdf.c  - HKDF 密钥派生实现
+├── hmac_drbg.c  - HMAC-DRBG 随机数发生器实现
+├── library.txt
+├── lmots.c  - LM-OTS 一次性签名实现
+├── lmots.h  - LM-OTS 接口声明
+├── lms.c  - LMS 哈希签名实现
+├── md.c  - 消息摘要统一接口实现
+├── md5.c  - MD5 哈希实现
+├── md_psa.h  - MD 与 PSA 的适配接口
+├── md_wrap.h  - 消息摘要封装接口
+├── memory_buffer_alloc.c  - 内存缓冲区分配器实现
+├── mps_common.h  - MPS（消息处理）公共定义
+├── mps_error.h  - MPS 错误码定义
+├── mps_reader.c  - MPS 读取器实现
+├── mps_reader.h  - MPS 读取器接口
+├── mps_trace.c  - MPS 跟踪/调试实现
+├── mps_trace.h  - MPS 跟踪接口
+├── net_sockets.c  - 网络 Socket 抽象实现
+├── nist_kw.c  - NIST Key Wrap 实现
+├── oid.c  - OID 数据库与查找实现
+├── padlock.c  - VIA Padlock 加速实现
+├── padlock.h  - VIA Padlock 接口声明
+├── pem.c  - PEM 编解码实现
+├── pk.c  - 公钥算法统一接口实现
+├── pk_ecc.c  - ECC 公钥算法适配实现
+├── pk_internal.h  - 公钥模块内部接口
+├── pk_wrap.c  - 公钥算法适配层实现
+├── pk_wrap.h  - 公钥算法适配层接口
+├── pkcs12.c  - PKCS#12 解析/生成实现
+├── pkcs5.c  - PKCS#5（PBKDF 等）实现
+├── pkcs7.c  - PKCS#7 相关解析实现
+├── pkparse.c  - 公私钥解析实现
+├── pkwrite.c  - 公私钥写出实现
+├── pkwrite.h  - 公私钥写出接口
+├── platform.c  - 平台抽象与可替换实现
+├── platform_util.c  - 平台工具函数（如零化）
+├── poly1305.c  - Poly1305 MAC 实现
+├── psa_crypto.c  - PSA Crypto 核心实现
+├── psa_crypto_aead.c  - PSA AEAD 实现
+├── psa_crypto_aead.h  - PSA AEAD 接口
+├── psa_crypto_cipher.c  - PSA Cipher 实现
+├── psa_crypto_cipher.h  - PSA Cipher 接口
+├── psa_crypto_client.c  - PSA Crypto 客户端/IPC 适配
+├── psa_crypto_core.h  - PSA Crypto 核心内部接口
+├── psa_crypto_core_common.h  - PSA Crypto 核心通用定义
+├── psa_crypto_driver_wrappers_no_static.h  - PSA 驱动包装接口（非 static）
+├── psa_crypto_ecp.c  - PSA ECP 实现
+├── psa_crypto_ecp.h  - PSA ECP 接口
+├── psa_crypto_ffdh.c  - PSA 有限域 DH 实现
+├── psa_crypto_ffdh.h  - PSA 有限域 DH 接口
+├── psa_crypto_hash.c  - PSA 哈希实现
+├── psa_crypto_hash.h  - PSA 哈希接口
+├── psa_crypto_invasive.h  - PSA Crypto 内部/侵入式接口
+├── psa_crypto_its.h  - PSA ITS 绑定接口
+├── psa_crypto_mac.c  - PSA MAC 实现
+├── psa_crypto_mac.h  - PSA MAC 接口
+├── psa_crypto_pake.c  - PSA PAKE 实现
+├── psa_crypto_pake.h  - PSA PAKE 接口
+├── psa_crypto_random_impl.h  - PSA 随机数实现接口
+├── psa_crypto_rsa.c  - PSA RSA 实现
+├── psa_crypto_rsa.h  - PSA RSA 接口
+├── psa_crypto_se.c  - PSA 安全元件（SE）实现
+├── psa_crypto_se.h  - PSA 安全元件接口
+├── psa_crypto_slot_management.c  - PSA 密钥槽管理实现
+├── psa_crypto_slot_management.h  - PSA 密钥槽管理接口
+├── psa_crypto_storage.c  - PSA 密钥存储实现
+├── psa_crypto_storage.h  - PSA 密钥存储接口
+├── psa_its_file.c  - PSA ITS 文件后端实现
+├── psa_util.c  - PSA 通用工具实现
+├── psa_util_internal.h  - PSA 工具内部接口
+├── ripemd160.c  - RIPEMD-160 哈希实现
+├── rsa.c  - RSA 实现
+├── rsa_alt_helpers.c  - RSA 替代实现辅助函数
+├── rsa_alt_helpers.h  - RSA 替代实现辅助接口
+├── rsa_internal.h  - RSA 内部接口
+├── sha1.c  - SHA-1 哈希实现
+├── sha256.c  - SHA-256 哈希实现
+├── sha3.c  - SHA-3 哈希实现
+├── sha512.c  - SHA-512 哈希实现
+├── ssl_cache.c  - TLS 会话缓存实现
+├── ssl_ciphersuites.c  - TLS 密码套件定义与选择
+├── ssl_ciphersuites_internal.h  - TLS 密码套件内部接口
+├── ssl_client.c  - TLS/DTLS 客户端实现
+├── ssl_client.h  - TLS 客户端内部接口
+├── ssl_cookie.c  - DTLS Cookie 处理实现
+├── ssl_debug_helpers.h  - SSL 调试辅助接口
+├── ssl_misc.h  - SSL 杂项内部定义
+├── ssl_msg.c  - TLS 消息读写与解析
+├── ssl_ticket.c  - 会话票据（Session Ticket）实现
+├── ssl_tls.c  - TLS/DTLS 核心状态机实现
+├── ssl_tls12_client.c  - TLS 1.2 客户端握手实现
+├── ssl_tls12_server.c  - TLS 1.2 服务端握手实现
+├── ssl_tls13_client.c  - TLS 1.3 客户端实现
+├── ssl_tls13_generic.c  - TLS 1.3 通用逻辑实现
+├── ssl_tls13_invasive.h  - TLS 1.3 内部/侵入式接口
+├── ssl_tls13_keys.c  - TLS 1.3 密钥派生实现
+├── ssl_tls13_keys.h  - TLS 1.3 密钥派生接口
+├── ssl_tls13_server.c  - TLS 1.3 服务端实现
+├── threading.c  - 线程抽象与锁实现
+├── threading_internal.h  - 线程内部接口
+├── timing.c  - 时间与延时工具实现
+├── version.c  - 版本信息实现
+├── x509.c  - X.509 通用处理实现
+├── x509_create.c  - X.509 创建辅助实现
+├── x509_crl.c  - X.509 CRL 解析实现
+├── x509_crt.c  - X.509 证书解析实现
+├── x509_csr.c  - X.509 CSR 解析实现
+├── x509_internal.h  - X.509 内部接口
+├── x509write.c  - X.509 写出通用实现
+├── x509write_crt.c  - X.509 证书写出实现
+└── x509write_csr.c  - X.509 CSR 写出实现
+
+0 directories, 169 files
